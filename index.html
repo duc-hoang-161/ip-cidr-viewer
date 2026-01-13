@@ -258,8 +258,8 @@
         function ipToLong(ip) {
             const parts = ip.split('.');
             return parts.reduce((acc, octet, index) => {
-                return acc + (parseInt(octet, 10) << (24 - (index * 8)));
-            }, 0) >>> 0;
+                return (acc + ((parseInt(octet, 10) << (24 - (index * 8))) >>> 0)) >>> 0;
+            }, 0);
         }
 
         function validateIP(ip) {
@@ -288,6 +288,11 @@
             
             const ipLong = ipToLong(ip);
             const cidrLong = ipToLong(cidrIP);
+            
+            // Handle special case of /0 (all IPs)
+            if (prefix === 0) {
+                return true;
+            }
             
             const mask = (0xFFFFFFFF << (32 - prefix)) >>> 0;
             
