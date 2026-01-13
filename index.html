@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP CIDR Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .results-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .ip-result {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .ip-result:hover {
+            transform: translateX(5px);
+        }
+
+        .ip-result.match {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .ip-result.no-match {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+
+        .ip-address {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .status.match {
+            color: #28a745;
+        }
+
+        .status.no-match {
+            color: #dc3545;
+        }
+
+        .status::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status.match::before {
+            background: #28a745;
+        }
+
+        .status.no-match::before {
+            background: #dc3545;
+        }
+
+        .error {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            color: #856404;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .summary {
+            background: #e7f3ff;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .summary-item {
+            flex: 1;
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 IP CIDR Viewer</h1>
+        <p class="subtitle">Check if IP addresses match a CIDR range</p>
+
+        <div class="input-group">
+            <label for="ipAddresses">IP Addresses</label>
+            <input 
+                type="text" 
+                id="ipAddresses" 
+                placeholder="e.g., 192.168.1.1, 192.168.1.5, 10.0.0.1"
+            >
+            <div class="help-text">Enter IP addresses separated by commas</div>
+        </div>
+
+        <div class="input-group">
+            <label for="cidr">CIDR Range</label>
+            <input 
+                type="text" 
+                id="cidr" 
+                placeholder="e.g., 192.168.1.0/24"
+            >
+            <div class="help-text">Enter CIDR notation (e.g., 192.168.1.0/24)</div>
+        </div>
+
+        <button onclick="checkCIDR()">Check IPs</button>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <div class="results-header">Results</div>
+            <div class="summary" id="summary"></div>
+            <div id="resultsList"></div>
+        </div>
+    </div>
+
+    <script>
+        function ipToLong(ip) {
+            const parts = ip.split('.');
+            return parts.reduce((acc, octet, index) => {
+                return acc + (parseInt(octet) << (24 - (index * 8)));
+            }, 0) >>> 0;
+        }
+
+        function validateIP(ip) {
+            const parts = ip.split('.');
+            if (parts.length !== 4) return false;
+            
+            return parts.every(part => {
+                const num = parseInt(part);
+                return !isNaN(num) && num >= 0 && num <= 255;
+            });
+        }
+
+        function validateCIDR(cidr) {
+            const parts = cidr.split('/');
+            if (parts.length !== 2) return false;
+            
+            const ip = parts[0];
+            const prefix = parseInt(parts[1]);
+            
+            return validateIP(ip) && !isNaN(prefix) && prefix >= 0 && prefix <= 32;
+        }
+
+        function isIPInCIDR(ip, cidr) {
+            const [cidrIP, prefixStr] = cidr.split('/');
+            const prefix = parseInt(prefixStr);
+            
+            const ipLong = ipToLong(ip);
+            const cidrLong = ipToLong(cidrIP);
+            
+            const mask = (0xFFFFFFFF << (32 - prefix)) >>> 0;
+            
+            return (ipLong & mask) === (cidrLong & mask);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        function checkCIDR() {
+            // Get input values
+            const ipInput = document.getElementById('ipAddresses').value.trim();
+            const cidrInput = document.getElementById('cidr').value.trim();
+            
+            // Validate inputs
+            if (!ipInput || !cidrInput) {
+                showError('Please enter both IP addresses and CIDR range');
+                return;
+            }
+            
+            // Parse IP addresses
+            const ips = ipInput.split(',').map(ip => ip.trim()).filter(ip => ip);
+            
+            if (ips.length === 0) {
+                showError('Please enter at least one IP address');
+                return;
+            }
+            
+            // Validate IP addresses
+            const invalidIPs = ips.filter(ip => !validateIP(ip));
+            if (invalidIPs.length > 0) {
+                showError(`Invalid IP address(es): ${invalidIPs.join(', ')}`);
+                return;
+            }
+            
+            // Validate CIDR
+            if (!validateCIDR(cidrInput)) {
+                showError('Invalid CIDR notation. Use format: 192.168.1.0/24');
+                return;
+            }
+            
+            // Check each IP against CIDR
+            const results = ips.map(ip => ({
+                ip: ip,
+                matches: isIPInCIDR(ip, cidrInput)
+            }));
+            
+            // Display results
+            displayResults(results, cidrInput);
+        }
+
+        function displayResults(results, cidr) {
+            const resultsDiv = document.getElementById('results');
+            const resultsListDiv = document.getElementById('resultsList');
+            const summaryDiv = document.getElementById('summary');
+            
+            // Calculate summary
+            const matchCount = results.filter(r => r.matches).length;
+            const totalCount = results.length;
+            
+            // Create summary
+            summaryDiv.innerHTML = `
+                <div class="summary-item">
+                    <div class="summary-value">${totalCount}</div>
+                    <div class="summary-label">Total IPs</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" style="color: #28a745;">${matchCount}</div>
+                    <div class="summary-label">Matches</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" style="color: #dc3545;">${totalCount - matchCount}</div>
+                    <div class="summary-label">No Match</div>
+                </div>
+            `;
+            
+            // Create result items
+            resultsListDiv.innerHTML = results.map(result => `
+                <div class="ip-result ${result.matches ? 'match' : 'no-match'}">
+                    <span class="ip-address">${result.ip}</span>
+                    <span class="status ${result.matches ? 'match' : 'no-match'}">
+                        ${result.matches ? 'Matches ' + cidr : 'Not in range'}
+                    </span>
+                </div>
+            `).join('');
+            
+            // Show results
+            resultsDiv.classList.add('show');
+            
+            // Smooth scroll to results
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Add enter key support
+        document.getElementById('ipAddresses').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('cidr').focus();
+            }
+        });
+
+        document.getElementById('cidr').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkCIDR();
+            }
+        });
+    </script>
+</body>
+</html>
