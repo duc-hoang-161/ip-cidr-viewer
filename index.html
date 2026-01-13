@@ -258,7 +258,7 @@
         function ipToLong(ip) {
             const parts = ip.split('.');
             return parts.reduce((acc, octet, index) => {
-                return acc + (parseInt(octet) << (24 - (index * 8)));
+                return acc + (parseInt(octet, 10) << (24 - (index * 8)));
             }, 0) >>> 0;
         }
 
@@ -267,7 +267,7 @@
             if (parts.length !== 4) return false;
             
             return parts.every(part => {
-                const num = parseInt(part);
+                const num = parseInt(part, 10);
                 return !isNaN(num) && num >= 0 && num <= 255;
             });
         }
@@ -277,14 +277,14 @@
             if (parts.length !== 2) return false;
             
             const ip = parts[0];
-            const prefix = parseInt(parts[1]);
+            const prefix = parseInt(parts[1], 10);
             
             return validateIP(ip) && !isNaN(prefix) && prefix >= 0 && prefix <= 32;
         }
 
         function isIPInCIDR(ip, cidr) {
             const [cidrIP, prefixStr] = cidr.split('/');
-            const prefix = parseInt(prefixStr);
+            const prefix = parseInt(prefixStr, 10);
             
             const ipLong = ipToLong(ip);
             const cidrLong = ipToLong(cidrIP);
