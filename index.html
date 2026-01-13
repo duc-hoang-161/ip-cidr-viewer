@@ -337,7 +337,7 @@
             // Validate IP addresses
             const invalidIPs = ips.filter(ip => !validateIP(ip));
             if (invalidIPs.length > 0) {
-                showError(`Invalid IP address(es): ${invalidIPs.join(', ')}`);
+                showError(`Invalid IP address(es): ${invalidIPs.map(escapeHtml).join(', ')}`);
                 return;
             }
             
