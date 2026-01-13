@@ -299,6 +299,12 @@
             return (ipLong & mask) === (cidrLong & mask);
         }
 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function showError(message) {
             const errorDiv = document.getElementById('error');
             errorDiv.textContent = message;
@@ -379,9 +385,9 @@
             // Create result items
             resultsListDiv.innerHTML = results.map(result => `
                 <div class="ip-result ${result.matches ? 'match' : 'no-match'}">
-                    <span class="ip-address">${result.ip}</span>
+                    <span class="ip-address">${escapeHtml(result.ip)}</span>
                     <span class="status ${result.matches ? 'match' : 'no-match'}">
-                        ${result.matches ? 'Matches ' + cidr : 'Not in range'}
+                        ${result.matches ? 'Matches ' + escapeHtml(cidr) : 'Not in range'}
                     </span>
                 </div>
             `).join('');
